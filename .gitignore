@@ -1,0 +1,10 @@
+bin/
+obj/
+*.egg-info/
+dist/
+build/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+out/
+*.nupkg

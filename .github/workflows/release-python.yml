@@ -1,0 +1,32 @@
+# Publishes to PyPI when a tag like py-v0.1.0 is pushed.
+# Uses PyPI trusted publishing: no token in GitHub secrets. Set it up once at
+# pypi.org -> Publishing -> add a pending publisher for this repo, workflow
+# release-python.yml, environment "pypi".
+name: release-python
+
+on:
+  push:
+    tags: ["py-v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Tag must match __version__
+        run: |
+          v=$(python -c "import re;print(re.search(r'__version__ = \"(.+?)\"', open('src/solproxy/__init__.py').read())[1])")
+          test "py-v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != py-v$v"; exit 1; }
+      - run: pip install build twine && python -m build && twine check --strict dist/*
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: python/dist

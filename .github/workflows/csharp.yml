@@ -1,0 +1,30 @@
+name: csharp
+
+on:
+  push:
+    branches: [main]
+    paths: ["csharp/**", ".github/workflows/csharp.yml"]
+  pull_request:
+    paths: ["csharp/**", ".github/workflows/csharp.yml"]
+
+defaults:
+  run:
+    working-directory: csharp
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore SolProxy.sln
+      - name: Format
+        run: dotnet format SolProxy.sln --verify-no-changes --no-restore
+      - name: Build (warnings are errors)
+        run: dotnet build SolProxy.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test SolProxy.sln -c Release --no-build
+      - name: Pack
+        run: dotnet pack src/SolProxy -c Release --no-build -o out

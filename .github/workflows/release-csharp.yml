@@ -1,0 +1,27 @@
+# Publishes to NuGet when a tag like cs-v0.1.0 is pushed.
+# Needs the NUGET_API_KEY secret (nuget.org -> API Keys, scope: push SolProxy).
+name: release-csharp
+
+on:
+  push:
+    tags: ["cs-v*"]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: nuget
+    defaults:
+      run:
+        working-directory: csharp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Tag must match <Version>
+        run: |
+          v=$(grep -oP '(?<=<Version>)[^<]+' src/SolProxy/SolProxy.csproj)
+          test "cs-v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != cs-v$v"; exit 1; }
+      - run: dotnet test SolProxy.sln -c Release
+      - run: dotnet pack src/SolProxy -c Release -o out
+      - run: dotnet nuget push "out/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

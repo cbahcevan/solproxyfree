@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solproxy"
+dynamic = ["version"]
+description = "Free rotating proxy pool for Python requests, with a one-line upgrade to residential proxies"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["requests>=2.20"]
+keywords = [
+    "proxy", "free proxy", "proxy list", "rotating proxy", "residential proxy",
+    "proxy pool", "web scraping", "scraping", "requests", "httpx",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://solproxy.net"
+"Free proxy list" = "https://solproxy.net/free-proxy-list"
+Pricing = "https://solproxy.net/pricing"
+
+[tool.setuptools.dynamic]
+version = { attr = "solproxy.__version__" }
+
+[tool.setuptools.package-data]
+solproxy = ["py.typed"]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "mypy", "types-requests", "build", "twine"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["UP006", "UP007", "UP035", "UP045"]
+
+[tool.mypy]
+strict = true
