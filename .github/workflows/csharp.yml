@@ -28,4 +28,4 @@ jobs:
       - name: Test
         run: dotnet test SolProxy.sln -c Release --no-build
       - name: Pack
-        run: dotnet pack src/SolProxy -c Release --no-build -o out
+        run: dotnet pack SolProxy -c Release --no-build -o out

@@ -20,8 +20,8 @@ jobs:
           dotnet-version: "8.0.x"
       - name: Tag must match <Version>
         run: |
-          v=$(grep -oP '(?<=<Version>)[^<]+' src/SolProxy/SolProxy.csproj)
+          v=$(grep -oP '(?<=<Version>)[^<]+' SolProxy/SolProxy.csproj)
           test "cs-v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != cs-v$v"; exit 1; }
       - run: dotnet test SolProxy.sln -c Release
-      - run: dotnet pack src/SolProxy -c Release -o out
+      - run: dotnet pack SolProxy -c Release -o out
       - run: dotnet nuget push "out/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

@@ -17,7 +17,7 @@ Both packages are thin clients for the gateway at `ws.solproxy.net:8500`. When f
 
 ## Releasing
 
-- Python: bump `__version__` in `python/src/solproxy/__init__.py`, then push tag `py-vX.Y.Z`.
-- C#: bump `<Version>` in `csharp/src/SolProxy/SolProxy.csproj`, then push tag `cs-vX.Y.Z`.
+- Python: bump `__version__` in `python/solproxy/__init__.py`, then push tag `py-vX.Y.Z`.
+- C#: bump `<Version>` in `csharp/SolProxy/SolProxy.csproj`, then push tag `cs-vX.Y.Z`.
 
 The release workflow fails if the tag and the version in the code differ.

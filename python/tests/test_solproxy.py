@@ -54,7 +54,7 @@ def test_free_proxies(monkeypatch):
         seen.update(url=url, params=params, ua=headers["User-Agent"])
         return Resp()
 
-    monkeypatch.setattr(solproxy.requests, "get", fake_get)
+    monkeypatch.setattr(solproxy.client.requests, "get", fake_get)
     rows = solproxy.free_proxies(country="de", type="residential")
     assert rows[0]["url"] == "http://1.2.3.4:8080"
     assert seen["url"] == "https://solproxy.net/free-proxy-list/api.json"

@@ -17,8 +17,7 @@ from typing import Any, Dict, List, Optional
 import requests
 from requests.adapters import HTTPAdapter
 
-__version__ = "0.1.0"
-__all__ = ["free_proxies", "proxy_url", "proxies", "Session", "HOST", "PORT"]
+from . import __version__
 
 HOST = "ws.solproxy.net"
 PORT = 8500

@@ -24,7 +24,7 @@ jobs:
           python-version: "3.12"
       - name: Tag must match __version__
         run: |
-          v=$(python -c "import re;print(re.search(r'__version__ = \"(.+?)\"', open('src/solproxy/__init__.py').read())[1])")
+          v=$(python -c "import re;print(re.search(r'__version__ = \"(.+?)\"', open('solproxy/__init__.py').read())[1])")
           test "py-v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != py-v$v"; exit 1; }
       - run: pip install build twine && python -m build && twine check --strict dist/*
       - uses: pypa/gh-action-pypi-publish@release/v1

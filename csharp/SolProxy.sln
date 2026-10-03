@@ -5,11 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{766FB475-CA3F-4C18-BFAA-FCB0C4C515CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolProxy", "src\SolProxy\SolProxy.csproj", "{E0429FFA-0915-4E31-9226-0A049FC64846}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolProxy", "SolProxy\SolProxy.csproj", "{E0429FFA-0915-4E31-9226-0A049FC64846}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{2F28A9F4-A7EB-45C4-85FF-C808E6021073}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolProxy.Tests", "tests\SolProxy.Tests\SolProxy.Tests.csproj", "{9767C1F8-6851-4B47-BF52-D277A79C4C74}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolProxy.Tests", "SolProxy.Tests\SolProxy.Tests.csproj", "{9767C1F8-6851-4B47-BF52-D277A79C4C74}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

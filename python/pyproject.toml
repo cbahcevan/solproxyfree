@@ -31,6 +31,9 @@ Pricing = "https://solproxy.net/pricing"
 [tool.setuptools.dynamic]
 version = { attr = "solproxy.__version__" }
 
+[tool.setuptools]
+packages = ["solproxy"]
+
 [tool.setuptools.package-data]
 solproxy = ["py.typed"]
 
