@@ -16,7 +16,7 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <RepositoryUrl>https://github.com/cbahcevan/solproxy-sdk</RepositoryUrl>
+    <RepositoryUrl>https://github.com/cbahcevan/solproxyfree</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" />
