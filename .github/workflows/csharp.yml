@@ -6,6 +6,7 @@ on:
     paths: ["csharp/**", ".github/workflows/csharp.yml"]
   pull_request:
     paths: ["csharp/**", ".github/workflows/csharp.yml"]
+  workflow_dispatch:
 
 defaults:
   run:
