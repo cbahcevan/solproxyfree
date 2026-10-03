@@ -1,4 +1,4 @@
-# solproxy: free rotating proxies for Python
+# solproxy: free proxies for Python that actually work
 
 ```bash
 pip install solproxy
@@ -7,49 +7,50 @@ pip install solproxy
 ```python
 import solproxy
 
-s = solproxy.Session()                       # free proxy pool, no signup
-print(s.get("https://api.ipify.org?format=json").json())
+s = solproxy.Session()
+print(s.get("https://api.ipify.org?format=json").json())   # a free proxy's IP, not yours
 ```
 
-Upgrade to residential proxies by adding one line:
+No signup, no API key, no proxy list to maintain.
 
-```python
-s = solproxy.Session(username="you", token="YOUR_TOKEN")
-```
+## Why most free proxy lists don't work, and what this does instead
 
-Residential proxies cost **$1.00–1.20/GB, pay as you go**. Get a token at [solproxy.net/pricing](https://solproxy.net/pricing).
+Public free proxy lists are mostly dead. The ones that answer are often too slow to load a page, and some tamper with HTTPS.
 
-## Free proxy pool
+SolProxy collects free proxies from public sources and re-tests every one of them **once a minute**:
 
-The free pool is built from public proxy lists. It is not an unchecked list: every proxy is re-tested once a minute from the gateway itself, by downloading a fixed file and verifying its checksum and its TLS certificate. Only proxies that pass are served. If a proxy dies mid-session, the gateway swaps in another one.
+- it downloads a fixed file through the proxy and checks its checksum, so proxies that are too slow or that corrupt data are dropped;
+- it verifies the target's TLS certificate, so proxies that intercept HTTPS are dropped;
+- only proxies that passed the latest test are served.
 
-Free proxies are still free proxies. They are slow, they disappear, and many sites block them. Use them to try things out, and switch to residential when you need it to work.
+`solproxy.Session()` sends each request through one of those live proxies. If one dies mid-session, the gateway swaps in another one, and the session retries on connection errors.
 
-The live list is at [solproxy.net/free-proxy-list](https://solproxy.net/free-proxy-list).
-
-## Country, sticky IP, proxy type
+## Pick country, type, or keep the same IP
 
 ```python
 s = solproxy.Session(country="de")                 # prefer a German exit
+s = solproxy.Session(type="residential")           # residential, datacenter or mobile
 s = solproxy.Session(sticky="10m")                 # same exit IP for 10 minutes
 s = solproxy.Session(sticky="10m", session="a1")   # several independent sticky sessions
-s = solproxy.Session(type="residential")           # free pool only: residential, datacenter, mobile
 ```
 
-`sticky` accepts `1m`, `2m`, `5m`, `10m`, `30m`, `1h`. Country is a preference: if no exit in that country is alive, another country is used. Type is strict: if no proxy of that type is alive, the request fails with 503.
+`sticky` accepts `1m`, `2m`, `5m`, `10m`, `30m`, `1h`. Country is a preference: if no live proxy is in that country, another country is used. Type is strict: if no proxy of that type is alive, the request fails with 503.
 
-## Rotating proxies with requests, httpx or anything else
+## Get the list itself
 
-`solproxy.Session` is a normal `requests.Session`. To use another client, take the URL:
+```python
+for p in solproxy.free_proxies(country="us", type="residential"):
+    print(p["url"], p["country"], p["latency_ms"], p["uptime"])
+```
+
+Each item has `ip`, `port`, `url`, `country`, `type`, `isp`, `latency_ms`, `uptime` (%) and `last_checked`. The same list is on [solproxy.net/free-proxy-list](https://solproxy.net/free-proxy-list). A list goes stale within minutes, so `Session()` is the better choice for anything that runs for a while.
+
+## Use it with httpx, aiohttp, curl or anything else
 
 ```python
 import httpx, solproxy
 
-url = solproxy.proxy_url(country="us")
-httpx.get("https://example.com", proxy=url)
-```
-
-```python
+httpx.get("https://example.com", proxy=solproxy.proxy_url(country="us"))
 requests.get("https://example.com", proxies=solproxy.proxies(country="us"))
 ```
 
@@ -57,12 +58,12 @@ requests.get("https://example.com", proxies=solproxy.proxies(country="us"))
 curl -x "$(python -c 'import solproxy; print(solproxy.proxy_url())')" https://api.ipify.org
 ```
 
-## Free vs residential
+## When free isn't enough
 
-|                 | Free pool             | SolProxy residential     |
-|-----------------|-----------------------|--------------------------|
-| Price           | $0                    | $1.00–1.20/GB            |
-| Signup          | No                    | Yes                      |
-| Exit IPs        | Public open proxies   | Real residential IPs     |
-| Uptime of an IP | Minutes               | Stable, sticky up to 1h  |
-| Country, sticky | Yes                   | Yes                      |
+Free proxies are still free proxies: slow, short-lived, and blocked by many sites. If you need every request to work, the same code runs on SolProxy residential proxies with one change:
+
+```python
+s = solproxy.Session(username="you", token="YOUR_TOKEN")
+```
+
+Residential is $1.00–1.20/GB, pay as you go. See [solproxy.net/pricing](https://solproxy.net/pricing).

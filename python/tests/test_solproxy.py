@@ -38,3 +38,30 @@ def test_session_wires_proxy_and_signature():
     adapter = s.get_adapter("https://example.com")
     assert adapter.proxy_headers(s.proxies["https"])["User-Agent"].startswith("solproxy-py/")
     assert "Proxy-Authorization" in adapter.proxy_headers(s.proxies["https"])
+
+
+def test_free_proxies(monkeypatch):
+    seen = {}
+
+    class Resp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"proxies": [{"ip": "1.2.3.4", "port": 8080, "country": "DE"}]}
+
+    def fake_get(url, params, timeout, headers):
+        seen.update(url=url, params=params, ua=headers["User-Agent"])
+        return Resp()
+
+    monkeypatch.setattr(solproxy.requests, "get", fake_get)
+    rows = solproxy.free_proxies(country="de", type="residential")
+    assert rows[0]["url"] == "http://1.2.3.4:8080"
+    assert seen["url"] == "https://solproxy.net/free-proxy-list/api.json"
+    assert seen["params"] == {"country": "de", "type": "residential"}
+    assert seen["ua"].startswith("solproxy-py/")
+
+
+def test_free_proxies_rejects_bad_type():
+    with pytest.raises(ValueError):
+        solproxy.free_proxies(type="residental")

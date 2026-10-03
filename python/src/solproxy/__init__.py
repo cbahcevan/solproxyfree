@@ -1,9 +1,10 @@
-"""SolProxy client: free proxy pool with a one-line upgrade to residential.
+"""Free proxies for Python, collected and re-tested every minute by SolProxy.
 
     import solproxy
 
-    s = solproxy.Session()                                   # free pool
-    s = solproxy.Session(country="de", sticky="10m")         # free, flags
+    s = solproxy.Session()                                   # rotating free proxies
+    s = solproxy.Session(country="de", sticky="10m")         # free, with flags
+    solproxy.free_proxies(country="de")                      # the raw list
     s = solproxy.Session(username="me", token="TOKEN")       # paid residential
 
 Both pools go through the same gateway (ws.solproxy.net:8500); only the
@@ -11,13 +12,13 @@ credentials differ. Flags travel in the proxy username, exactly as the
 gateway parses them (backend/proxyserver.py `_parse_username_flags`).
 """
 
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 from requests.adapters import HTTPAdapter
 
 __version__ = "0.1.0"
-__all__ = ["proxy_url", "proxies", "Session", "HOST", "PORT"]
+__all__ = ["free_proxies", "proxy_url", "proxies", "Session", "HOST", "PORT"]
 
 HOST = "ws.solproxy.net"
 PORT = 8500
@@ -25,6 +26,29 @@ USER_AGENT = f"solproxy-py/{__version__}"
 
 STICKY = ("1m", "2m", "5m", "10m", "30m", "1h")
 TYPES = ("residential", "datacenter", "mobile")  # free pool only
+LIST_URL = "https://solproxy.net/free-proxy-list/api.json"
+
+
+def free_proxies(
+    country: Optional[str] = None, type: Optional[str] = None, timeout: float = 15
+) -> List[Dict[str, Any]]:
+    """The free proxies that passed the gateway's latest probe.
+
+    Each item has ip, port, country, type, isp, latency_ms, uptime (%),
+    last_checked, plus `url` ready for a proxies= argument. Free proxies die
+    within minutes; Session() picks a live one per request instead.
+    """
+    if type and type not in TYPES:
+        raise ValueError(f"type must be one of {TYPES}")
+    if country and (len(country) != 2 or not country.isalpha()):
+        raise ValueError("country is a 2-letter code, e.g. 'de'")
+    params = {k: v for k, v in (("country", country), ("type", type)) if v}
+    r = requests.get(LIST_URL, params=params, timeout=timeout, headers={"User-Agent": USER_AGENT})
+    r.raise_for_status()
+    rows: List[Dict[str, Any]] = r.json()["proxies"]
+    for row in rows:
+        row["url"] = f"http://{row['ip']}:{row['port']}"
+    return rows
 
 
 def proxy_url(

@@ -1,7 +1,10 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SolProxy
 {
@@ -23,18 +26,61 @@ namespace SolProxy
     }
 
     /// <summary>
-    /// Free proxy pool with a one-line upgrade to residential. Both pools go
+    /// Free proxies collected and re-tested every minute by SolProxy, with a
+    /// one-line upgrade to residential. Both pools go
     /// through the same gateway; flags travel in the proxy username.
     /// </summary>
     public static class SolProxyClient
     {
         public const string DefaultHost = "ws.solproxy.net";
         public const int DefaultPort = 8500;
+        public const string FreeListUrl = "https://solproxy.net/free-proxy-list/api.txt";
         public static readonly string UserAgent =
             "solproxy-cs/" + typeof(SolProxyClient).Assembly.GetName().Version.ToString(3);
 
         static readonly string[] StickyValues = { "1m", "2m", "5m", "10m", "30m", "1h" };
         static readonly string[] Types = { "residential", "datacenter", "mobile" };
+
+        /// <summary>
+        /// The free proxies that passed the gateway's latest probe, as http://ip:port.
+        /// They die within minutes; Create() picks a live one per request instead.
+        /// </summary>
+        public static async Task<IReadOnlyList<Uri>> GetFreeProxiesAsync(
+            string country = null, string type = null, HttpClient http = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (!string.IsNullOrEmpty(type) && !Types.Contains(type))
+                throw new ArgumentException("Type must be one of " + string.Join(", ", Types));
+            if (!string.IsNullOrEmpty(country) && (country.Length != 2 || !country.All(char.IsLetter)))
+                throw new ArgumentException("Country is a 2-letter code, e.g. \"de\"");
+
+            var query = new List<string>();
+            if (!string.IsNullOrEmpty(country)) query.Add("country=" + Uri.EscapeDataString(country));
+            if (!string.IsNullOrEmpty(type)) query.Add("type=" + Uri.EscapeDataString(type));
+            var url = FreeListUrl + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+            var owned = http == null;
+            http = http ?? new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+            try
+            {
+                using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    request.Headers.TryAddWithoutValidation("User-Agent", UserAgent);
+                    using (var response = await http.SendAsync(request, cancellationToken).ConfigureAwait(false))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        return body.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(line => new Uri("http://" + line.Trim()))
+                            .ToList();
+                    }
+                }
+            }
+            finally
+            {
+                if (owned) http.Dispose();
+            }
+        }
 
         /// <summary>Proxy username carrying the pool and flags, e.g. free-de-sticky10m.</summary>
         public static string ProxyUsername(SolProxyOptions o)

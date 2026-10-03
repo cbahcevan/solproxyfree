@@ -1,13 +1,19 @@
-# SolProxy SDKs
+# SolProxy free proxies: Python and .NET
 
-Free rotating proxy pool with a one-line upgrade to residential proxies.
+Free proxies that actually work. SolProxy collects free proxies from public sources, re-tests each one every minute (real download, checksum and TLS certificate check) and serves only the live ones through a single rotating endpoint.
 
-| Language | Package | Folder |
+| Language | Install | Folder |
 |----------|---------|--------|
 | Python   | `pip install solproxy` | [python/](python) |
 | C# / .NET | `dotnet add package SolProxy` | [csharp/](csharp) |
 
-Both are thin clients for the gateway at `ws.solproxy.net:8500`. No credentials means the free pool; a username and token from [solproxy.net](https://solproxy.net/pricing) means residential.
+```python
+import solproxy
+solproxy.Session().get("https://example.com")       # through a live free proxy
+solproxy.free_proxies(country="de")                 # or just the list
+```
+
+Both packages are thin clients for the gateway at `ws.solproxy.net:8500`. When free isn't enough, a username and token from [solproxy.net](https://solproxy.net/pricing) switch the same code to residential proxies.
 
 ## Releasing
 

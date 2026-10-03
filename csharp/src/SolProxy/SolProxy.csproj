@@ -5,8 +5,8 @@
     <Version>0.1.0</Version>
     <PackageId>SolProxy</PackageId>
     <Authors>SolProxy</Authors>
-    <Description>Free rotating proxy pool for .NET HttpClient, with a one-line upgrade to residential proxies.</Description>
-    <PackageTags>proxy;free-proxy;proxy-list;rotating-proxy;residential-proxy;proxy-pool;web-scraping;scraping;httpclient</PackageTags>
+    <Description>Free proxy list for .NET, re-tested every minute: rotating free proxies for HttpClient, no signup.</Description>
+    <PackageTags>proxy;free-proxy;free-proxy-list;proxy-list;proxy-checker;rotating-proxy;residential-proxy;proxy-pool;web-scraping;scraping;httpclient</PackageTags>
     <PackageProjectUrl>https://solproxy.net</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

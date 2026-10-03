@@ -1,5 +1,8 @@
 using System;
 using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using SolProxy;
 using Xunit;
 
@@ -48,4 +51,32 @@ public class SolProxyClientTests
     [Fact]
     public void ClientSignature() =>
         Assert.StartsWith("solproxy-cs/0.1.0", SolProxyClient.Create().DefaultRequestHeaders.UserAgent.ToString());
+
+    [Fact]
+    public async Task FreeProxies()
+    {
+        var handler = new FakeHandler("1.2.3.4:8080\n5.6.7.8:3128\n");
+        var list = await SolProxyClient.GetFreeProxiesAsync("de", "residential", new HttpClient(handler));
+        Assert.Equal(new[] { new Uri("http://1.2.3.4:8080"), new Uri("http://5.6.7.8:3128") }, list);
+        Assert.Equal("https://solproxy.net/free-proxy-list/api.txt?country=de&type=residential", handler.Url);
+        Assert.StartsWith("solproxy-cs/", handler.UserAgent);
+    }
+
+    [Fact]
+    public Task FreeProxiesRejectsBadType() =>
+        Assert.ThrowsAsync<ArgumentException>(() => SolProxyClient.GetFreeProxiesAsync(type: "residental"));
+
+    sealed class FakeHandler : HttpMessageHandler
+    {
+        readonly string _body;
+        public string Url, UserAgent;
+        public FakeHandler(string body) => _body = body;
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            Url = request.RequestUri.ToString();
+            UserAgent = request.Headers.UserAgent.ToString();
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(_body) });
+        }
+    }
 }

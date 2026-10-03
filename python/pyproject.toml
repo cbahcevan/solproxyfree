@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "solproxy"
 dynamic = ["version"]
-description = "Free rotating proxy pool for Python requests, with a one-line upgrade to residential proxies"
+description = "Free proxy list for Python, re-tested every minute: rotating free proxies for requests and httpx, no signup"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = ["requests>=2.20"]
 keywords = [
-    "proxy", "free proxy", "proxy list", "rotating proxy", "residential proxy",
+    "proxy", "free proxy", "free proxy list", "proxy list", "proxy checker", "rotating proxy", "residential proxy",
     "proxy pool", "web scraping", "scraping", "requests", "httpx",
 ]
 classifiers = [
