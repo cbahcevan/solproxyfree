@@ -53,6 +53,16 @@ IWebProxy proxy = SolProxyClient.CreateProxy(options);  // any IWebProxy consume
 string url = SolProxyClient.ProxyUrl(options);          // http://user:pass@host:port
 ```
 
+## Ports
+
+The free endpoint is `ws.solproxy.net:8501` and takes no credentials. If only port 8500 is allowed out of your network, the same free proxies are there under the username `free`:
+
+```csharp
+SolProxyClient.Create(new SolProxyOptions { Port = 8500 });   // http://free:x@ws.solproxy.net:8500
+```
+
+Residential always uses 8500.
+
 ## When free isn't enough
 
 Free proxies are still free proxies: slow, short-lived, and blocked by many sites. If you need every request to work, the same code runs on SolProxy residential proxies with one change:

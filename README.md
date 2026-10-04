@@ -13,7 +13,7 @@ solproxy.Session().get("https://example.com")       # through a live free proxy
 solproxy.free_proxies(country="de")                 # or just the list
 ```
 
-Both packages are thin clients for the gateway at `ws.solproxy.net:8500`. When free isn't enough, a username and token from [solproxy.net](https://solproxy.net/pricing) switch the same code to residential proxies.
+Both packages are thin clients for the gateway at `ws.solproxy.net`: free proxies on port 8501 with no credentials (or on 8500 as the username `free`), residential on 8500. When free isn't enough, a username and token from [solproxy.net](https://solproxy.net/pricing) switch the same code to residential proxies.
 
 ## Releasing
 

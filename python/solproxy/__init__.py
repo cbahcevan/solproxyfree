@@ -5,6 +5,6 @@ The code is in client.py.
 
 __version__ = "0.1.0"
 
-from .client import HOST, PORT, Session, free_proxies, proxies, proxy_url
+from .client import FREE_PORT, HOST, PORT, Session, free_proxies, proxies, proxy_url
 
-__all__ = ["free_proxies", "proxy_url", "proxies", "Session", "HOST", "PORT"]
+__all__ = ["free_proxies", "proxy_url", "proxies", "Session", "HOST", "PORT", "FREE_PORT"]

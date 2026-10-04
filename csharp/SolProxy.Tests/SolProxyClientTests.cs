@@ -10,12 +10,29 @@ public class SolProxyClientTests
 {
     [Fact]
     public void FreeDefault() =>
-        Assert.Equal("http://free:x@ws.solproxy.net:8500", SolProxyClient.ProxyUrl());
+        Assert.Equal("http://ws.solproxy.net:8501", SolProxyClient.ProxyUrl());
 
     [Fact]
     public void FreeFlags() =>
-        Assert.Equal("http://free-residential-de-sticky10m:x@ws.solproxy.net:8500",
+        Assert.Equal("http://residential-de-sticky10m:x@ws.solproxy.net:8501",
             SolProxyClient.ProxyUrl(new SolProxyOptions { Country = "DE", Sticky = "10m", Type = "residential" }));
+
+    [Fact]
+    public void FreeOnAccountPort()
+    {
+        Assert.Equal("http://free:x@ws.solproxy.net:8500",
+            SolProxyClient.ProxyUrl(new SolProxyOptions { Port = 8500 }));
+        Assert.Equal("http://free-de-sticky10m:x@ws.solproxy.net:8500",
+            SolProxyClient.ProxyUrl(new SolProxyOptions { Country = "de", Sticky = "10m", Port = 8500 }));
+    }
+
+    [Fact]
+    public void FreeDefaultHasNoCredentials()
+    {
+        var p = SolProxyClient.CreateProxy();
+        Assert.Null(p.Credentials);
+        Assert.Equal(new Uri("http://ws.solproxy.net:8501"), p.Address);
+    }
 
     [Fact]
     public void Paid() =>
@@ -27,8 +44,8 @@ public class SolProxyClientTests
     {
         var p = SolProxyClient.CreateProxy(new SolProxyOptions { Country = "de" });
         var c = p.Credentials.GetCredential(p.Address, "Basic");
-        Assert.Equal("free-de", c.UserName);
-        Assert.Equal(new Uri("http://ws.solproxy.net:8500"), p.Address);
+        Assert.Equal("de", c.UserName);
+        Assert.Equal(new Uri("http://ws.solproxy.net:8501"), p.Address);
     }
 
     [Theory]

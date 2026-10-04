@@ -22,18 +22,26 @@ namespace SolProxy
         /// <summary>Free pool only, strict: residential, datacenter or mobile.</summary>
         public string Type { get; set; }
         public string Host { get; set; } = SolProxyClient.DefaultHost;
-        public int Port { get; set; } = SolProxyClient.DefaultPort;
+        /// <summary>
+        /// Leave null for the default: 8501 for the free pool, 8500 for the paid one.
+        /// Set 8500 to reach the free pool through the account endpoint.
+        /// </summary>
+        public int? Port { get; set; }
     }
 
     /// <summary>
     /// Free proxies collected and re-tested every minute by SolProxy, with a
     /// one-line upgrade to residential. Both pools go
-    /// through the same gateway; flags travel in the proxy username.
+    /// through the same gateway: the free pool on 8501 with no credentials,
+    /// the paid pool on 8500. Flags travel in the proxy username.
     /// </summary>
     public static class SolProxyClient
     {
         public const string DefaultHost = "ws.solproxy.net";
+        /// <summary>Account endpoint; the free pool is the username "free" here.</summary>
         public const int DefaultPort = 8500;
+        /// <summary>Free pool, no credentials.</summary>
+        public const int DefaultFreePort = 8501;
         public const string FreeListUrl = "https://solproxy.net/free-proxy-list/api.txt";
         public static readonly string UserAgent =
             "solproxy-cs/" + typeof(SolProxyClient).Assembly.GetName().Version.ToString(3);
@@ -82,7 +90,14 @@ namespace SolProxy
             }
         }
 
-        /// <summary>Proxy username carrying the pool and flags, e.g. free-de-sticky10m.</summary>
+        /// <summary>Port the options resolve to.</summary>
+        public static int ResolvePort(SolProxyOptions o) =>
+            o?.Port ?? (string.IsNullOrEmpty(o?.Username) ? DefaultFreePort : DefaultPort);
+
+        /// <summary>
+        /// Proxy username carrying the pool and flags, e.g. free-de-sticky10m on 8500
+        /// or de-sticky10m on 8501. Empty when the free pool is used on 8501 without flags.
+        /// </summary>
         public static string ProxyUsername(SolProxyOptions o)
         {
             o = o ?? new SolProxyOptions();
@@ -102,9 +117,12 @@ namespace SolProxy
             if (!string.IsNullOrEmpty(o.Session) && o.Session.IndexOfAny(new[] { '-', ':', '@' }) >= 0)
                 throw new ArgumentException("Session may not contain '-', ':' or '@'");
 
+            // 8501 has no account, so every part of the username is a flag there;
+            // a leading "free" would be read as a session key.
+            bool anonymous = !paid && ResolvePort(o) == DefaultFreePort;
             var parts = new[]
             {
-                paid ? o.Username : "free",
+                paid ? o.Username : anonymous ? null : "free",
                 o.Type,
                 o.Country?.ToLowerInvariant(),
                 string.IsNullOrEmpty(o.Sticky) ? null : "sticky" + o.Sticky,
@@ -117,18 +135,20 @@ namespace SolProxy
         public static string ProxyUrl(SolProxyOptions options = null)
         {
             var o = options ?? new SolProxyOptions();
-            return "http://" + ProxyUsername(o) + ":" + (string.IsNullOrEmpty(o.Token) ? "x" : o.Token)
-                   + "@" + o.Host + ":" + o.Port;
+            var user = ProxyUsername(o);
+            var auth = user.Length == 0 ? "" : user + ":" + (string.IsNullOrEmpty(o.Token) ? "x" : o.Token) + "@";
+            return "http://" + auth + o.Host + ":" + ResolvePort(o);
         }
 
         /// <summary>IWebProxy for any .NET client.</summary>
         public static WebProxy CreateProxy(SolProxyOptions options = null)
         {
             var o = options ?? new SolProxyOptions();
-            return new WebProxy(new Uri("http://" + o.Host + ":" + o.Port))
-            {
-                Credentials = new NetworkCredential(ProxyUsername(o), string.IsNullOrEmpty(o.Token) ? "x" : o.Token),
-            };
+            var user = ProxyUsername(o);
+            var proxy = new WebProxy(new Uri("http://" + o.Host + ":" + ResolvePort(o)));
+            if (user.Length > 0)
+                proxy.Credentials = new NetworkCredential(user, string.IsNullOrEmpty(o.Token) ? "x" : o.Token);
+            return proxy;
         }
 
         public static HttpClientHandler CreateHandler(SolProxyOptions options = null) =>

@@ -58,6 +58,22 @@ requests.get("https://example.com", proxies=solproxy.proxies(country="us"))
 curl -x "$(python -c 'import solproxy; print(solproxy.proxy_url())')" https://api.ipify.org
 ```
 
+## Ports
+
+The free endpoint is `ws.solproxy.net:8501` and takes no credentials, so the plain URL works in any tool:
+
+```bash
+curl -x http://ws.solproxy.net:8501 https://api.ipify.org
+```
+
+If only port 8500 is allowed out of your network, the same free proxies are there under the username `free`:
+
+```python
+s = solproxy.Session(port=8500)              # http://free:x@ws.solproxy.net:8500
+```
+
+Residential always uses 8500.
+
 ## When free isn't enough
 
 Free proxies are still free proxies: slow, short-lived, and blocked by many sites. If you need every request to work, the same code runs on SolProxy residential proxies with one change:

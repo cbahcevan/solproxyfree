@@ -4,12 +4,23 @@ import solproxy
 
 
 def test_free_default():
-    assert solproxy.proxy_url() == "http://free:x@ws.solproxy.net:8500"
+    assert solproxy.proxy_url() == "http://ws.solproxy.net:8501"
 
 
 def test_free_flags():
     url = solproxy.proxy_url(country="DE", sticky="10m", type="residential")
-    assert url == "http://free-residential-de-sticky10m:x@ws.solproxy.net:8500"
+    assert url == "http://residential-de-sticky10m:x@ws.solproxy.net:8501"
+
+
+def test_free_on_account_port():
+    assert solproxy.proxy_url(port=8500) == "http://free:x@ws.solproxy.net:8500"
+    url = solproxy.proxy_url(country="de", sticky="10m", port=8500)
+    assert url == "http://free-de-sticky10m:x@ws.solproxy.net:8500"
+
+
+def test_session_port_option():
+    assert solproxy.Session().proxies["https"] == "http://ws.solproxy.net:8501"
+    assert solproxy.Session(port=8500).proxies["https"] == "http://free:x@ws.solproxy.net:8500"
 
 
 def test_paid():
@@ -34,7 +45,7 @@ def test_rejects(kw):
 
 def test_session_wires_proxy_and_signature():
     s = solproxy.Session(country="de")
-    assert s.proxies["https"] == "http://free-de:x@ws.solproxy.net:8500"
+    assert s.proxies["https"] == "http://de:x@ws.solproxy.net:8501"
     adapter = s.get_adapter("https://example.com")
     assert adapter.proxy_headers(s.proxies["https"])["User-Agent"].startswith("solproxy-py/")
     assert "Proxy-Authorization" in adapter.proxy_headers(s.proxies["https"])

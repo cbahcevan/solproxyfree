@@ -7,9 +7,12 @@
     solproxy.free_proxies(country="de")                      # the raw list
     s = solproxy.Session(username="me", token="TOKEN")       # paid residential
 
-Both pools go through the same gateway (ws.solproxy.net:8500); only the
-credentials differ. Flags travel in the proxy username, exactly as the
-gateway parses them (backend/proxyserver.py `_parse_username_flags`).
+    s = solproxy.Session(port=8500)                          # free, as free:x@...:8500
+
+Both pools go through the same gateway (ws.solproxy.net). The free pool
+uses port 8501, which takes no credentials; the paid pool uses 8500. Flags
+travel in the proxy username, exactly as the gateway parses them
+(backend/proxyserver.py `_parse_username_flags`).
 """
 
 from typing import Any, Dict, List, Optional
@@ -20,7 +23,8 @@ from requests.adapters import HTTPAdapter
 from . import __version__
 
 HOST = "ws.solproxy.net"
-PORT = 8500
+PORT = 8500  # account endpoint; the free pool is `free:x@` here
+FREE_PORT = 8501  # free pool, no credentials
 USER_AGENT = f"solproxy-py/{__version__}"
 
 STICKY = ("1m", "2m", "5m", "10m", "30m", "1h")
@@ -58,9 +62,14 @@ def proxy_url(
     session: Optional[str] = None,
     type: Optional[str] = None,
     host: str = HOST,
-    port: int = PORT,
+    port: Optional[int] = None,
 ) -> str:
-    """Build the proxy URL. No username/token means the free pool."""
+    """Build the proxy URL. No username/token means the free pool.
+
+    `port` defaults to 8501 for the free pool and 8500 for the paid one.
+    Pass `port=8500` to reach the free pool through the account endpoint,
+    e.g. where only that port is allowed out.
+    """
     if bool(username) != bool(token):
         raise ValueError("username and token go together")
     if sticky and sticky not in STICKY:
@@ -75,15 +84,21 @@ def proxy_url(
     if session and ("-" in session or ":" in session or "@" in session):
         raise ValueError("session may not contain '-', ':' or '@'")
 
+    if port is None:
+        port = PORT if username else FREE_PORT
+    # 8501 has no account, so every part of the username is a flag there;
+    # a leading "free" would be read as a session key.
+    anonymous = not username and port == FREE_PORT
     parts = [
-        username or "free",
+        None if anonymous else username or "free",
         type,
         country.lower() if country else None,
         f"sticky{sticky}" if sticky else None,
         session,
     ]
     user = "-".join(p for p in parts if p)
-    return f"http://{user}:{token or 'x'}@{host}:{port}"
+    auth = f"{user}:{token or 'x'}@" if user else ""
+    return f"http://{auth}{host}:{port}"
 
 
 def proxies(**kwargs) -> Dict[str, str]:  # type: ignore[no-untyped-def]
@@ -119,6 +134,8 @@ class Session(requests.Session):
         type: Optional[str] = None,
         retries: int = 2,
         timeout: float = 30,
+        host: str = HOST,
+        port: Optional[int] = None,
     ) -> None:
         super().__init__()
         self.proxies.update(
@@ -129,6 +146,8 @@ class Session(requests.Session):
                 sticky=sticky,
                 session=session,
                 type=type,
+                host=host,
+                port=port,
             )
         )
         self.headers["User-Agent"] = USER_AGENT
